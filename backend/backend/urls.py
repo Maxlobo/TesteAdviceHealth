@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 
-urlspatterns = [
+urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('tarefas.urls'))
 ]

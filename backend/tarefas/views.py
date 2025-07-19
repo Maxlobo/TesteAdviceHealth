@@ -12,7 +12,7 @@ from .serializers import RegisterSerializer, UserSerializer, TaskSerializer
 class RegisterView(generics.CreateAPIView):
     """View for user registration."""
     queryset = User.objects.all()
-    permission_classes = (permissions.AllowAny)
+    permission_classes = [permissions.AllowAny]
     serializer_class = RegisterSerializer
 
     def post(self, request, *args, **kwargs):
@@ -32,7 +32,7 @@ class RegisterView(generics.CreateAPIView):
 
 class LoginView(APIView):
     """View for user login."""
-    permission_classes = (permissions.AllowAny)
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         """Handle user login."""
@@ -58,7 +58,7 @@ class LoginView(APIView):
 
 class UserView(generics.RetrieveAPIView):
     """View for retrieving user information."""
-    permission_classes = (permissions.IsAuthenticated)
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserSerializer
 
     def get_object(self):
@@ -68,7 +68,7 @@ class UserView(generics.RetrieveAPIView):
 
 class TaskListView(generics.ListCreateAPIView):
     """View for listing and creating tasks."""
-    permission_classes = (permissions.IsAuthenticated)
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = TaskSerializer
 
     def get_queryset(self):
@@ -87,7 +87,7 @@ class TaskListView(generics.ListCreateAPIView):
 
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     """View for retrieving, updating, and deleting a task."""
-    permission_classes = (permissions.IsAuthenticated)
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = TaskSerializer
 
     def get_queryset(self):
