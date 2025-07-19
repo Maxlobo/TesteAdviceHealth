@@ -58,7 +58,7 @@ class LoginView(APIView):
 
 class UserView(generics.RetrieveAPIView):
     """View for retrieving user information."""
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated)
     serializer_class = UserSerializer
 
     def get_object(self):
@@ -66,3 +66,30 @@ class UserView(generics.RetrieveAPIView):
         return self.request.user
 
 
+class TaskListView(generics.ListCreateAPIView):
+    """View for listing and creating tasks."""
+    permission_classes = (permissions.IsAuthenticated)
+    serializer_class = TaskSerializer
+
+    def get_queryset(self):
+        """Return tasks for the authenticated user."""
+        queryset = Task.objects.filter(user=self.request.user)
+        completed = self.request.query_params.get('completed', None)
+        if completed is not None:
+            queryset = queryset.filter(completed=completed.lower() == 'true')
+
+        return queryset
+
+    def perform_create(self, serializer):
+        """Associate the task with the authenticated user."""
+        serializer.save(user=self.request.user)
+
+
+class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """View for retrieving, updating, and deleting a task."""
+    permission_classes = (permissions.IsAuthenticated)
+    serializer_class = TaskSerializer
+
+    def get_queryset(self):
+        """Return tasks for the authenticated user."""
+        return Task.objects.filter(user=self.request.user)
