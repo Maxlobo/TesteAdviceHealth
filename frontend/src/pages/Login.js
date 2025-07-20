@@ -7,18 +7,19 @@ import "../styles/login.css";
 const Login = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState(null);
+    const [error, setError] = useState("");
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
+        setError("");
         try {
             await login(username, password);
             navigate("/");
-        } catch (error) {
-            setError(error.response || 'Login failed. Please verify your credentials.');
+        } catch (err) {
+            console.error("Login error:", err);
+            setError(err.response?.data?.detail || 'Login failed. Please verify your credentials.');
         }
     };
 

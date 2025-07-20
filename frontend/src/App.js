@@ -1,6 +1,7 @@
 import React from "react";
-import { BrowserRouter as useNavigate, Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import TaskList from "./pages/TaskList";
 import AuthContext from "./context/AuthContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -19,11 +20,11 @@ function Header() {
     return (
         <header className="header">
             <nav>
-                <Link to="/" className="link"> Home (Tarefas) </Link>
+                <Link to="/" className="link"> Tasks </Link>
                 {!isAuthenticated && (
                     <>
-                        <Link to="/login" className="link">Login</Link>
-                        <Link to="/register" className="link">Registro</Link>
+                        <Link to="/login/" className="link">Login</Link>
+                        <Link to="/register/" className="link">Register</Link>
                     </>
                 )}
             </nav>
@@ -44,8 +45,8 @@ function App() {
                 <main style={{ padding: '20px' }}>
                     <Routes>
                         <Route path="/" element={<TaskList />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
+                        <Route path="/login/" element={<Login />} />
+                        <Route path="/register/" element={<Register />} />
                     </Routes>
                 </main>
             </AuthProvider>

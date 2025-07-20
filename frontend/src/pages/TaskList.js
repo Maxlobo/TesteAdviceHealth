@@ -8,151 +8,145 @@ import "../styles/taskList.css";
 
 
 function TaskList() {
-    const { isAuthenticated, loading } = useContext(AuthContext);
+    const { isAuthenticated, loading, logout } = useContext(AuthContext);
     const navigate = useNavigate();
     const [tasks, setTasks] = useState([]);
-    const [showTaskForm, setShowTaskForm] = useState(false);
-    const [editingTask, setEditingTask] = useState(null);
-    const [filter, setFilter] = useState('all');
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
+    const [filter, setFilter] = useState("all");
+    const [showFormModal, setShowFormModal] = useState(false);
+    const [currentTask, setCurrentTask] = useState(null);
+    const [apiError, setApiError] = useState('');
 
-    const fetchTasks = async (page = 1, currentFilter = filter) => {
-        if (!isAuthenticated) return;
+    useEffect(() => {
+        if (!loading && !isAuthenticated) {
+            navigate('/login/');
+        }
+    }, [isAuthenticated, loading, navigate]);
 
+    const fetchTasks = async () => {
+        setApiError('');
         try {
-            let url = `tasks/?page=${page}`;
-            if (currentFilter !== 'all') {
-                url += `&completed=${currentFilter === 'completed'}`;
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                const response = await api.get('tasks/');
+                setTasks(response.data);
             }
-            const response = await api.get(url);
-            setTasks(response.data.results);
-            setTotalPages(Math.ceil(response.data.count / 10));
         } catch (error) {
-            console.error("Error fetching tasks:", error.response.data || error.message);
+            console.error('Erro ao buscar tarefas:', error.response?.data || error.message);
+            setApiError('Erro ao carregar tarefas. Por favor, tente novamente.');
+
             if (error.response && error.response.status === 401) {
-                navigate('/login');
+                logout();
             }
         }
     };
 
     useEffect(() => {
-        if (!loading && !isAuthenticated) {
-            navigate('/login');
-            return;
-        } else if (!loading && isAuthenticated) {
-            fetchTasks(currentPage, filter);
+        if (isAuthenticated) {
+            fetchTasks();
         }
-    }, [isAuthenticated, loading, currentPage, filter, navigate]);
+    }, [isAuthenticated]);
 
-    const handleAddTask = (task) => {
-        setEditingTask(null);
-        setShowTaskForm(true);
-    };
+    const filteredTasks = tasks.filter(task => {
+        if (filter === 'completed') return task.completed;
+        if (filter === 'incomplete') return !task.completed;
+        return true;
+    });
 
-    const handleEditTask = (task) => {
-        setEditingTask(task);
-        setShowTaskForm(true);
-    };
 
-    const handleTaskFormClose = () => {
-        setShowTaskForm(false);
-        setEditingTask(null);
-        fetchTasks(currentPage, filter);
-    };
-
-    const handleToggleComplete = async (taskId, currentCompletedStatus) => {
+    const handleToggleComplete = async (id, completed) => {
+        setApiError('');
         try {
-            await api.patch(`tasks/${taskId}/`, { completed: !currentCompletedStatus });
-            fetchTasks(currentPage, filter);
-        } catch (error) {
-            console.error("Error updating task:", error.response.data || error.message);
-        }
-    };
-
-    const handleDeleteTask = async (taskId) => {
-        if (window.confirm("Are you sure you want to delete this task?")) {
-            try {
-                await api.delete(`tasks/${taskId}/`);
-                fetchTasks(currentPage, filter);
-            } catch (error) {
-                console.error("Error deleting task:", error.response.data || error.message);
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                await api.patch(`tasks/${id}/`, { completed: !completed });
+                fetchTasks();
             }
+        } catch (error) {
+            console.error('Erro ao alternar status da tarefa:', error.response?.data || error.message);
+            setApiError('Erro ao atualizar status da tarefa.');
         }
     };
 
-    const handlePreviousPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
-            fetchTasks(currentPage - 1, filter);
+    const handleDelete = async (id) => {
+        setApiError('');
+        try {
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                await api.delete(`tasks/${id}/`);
+                fetchTasks();
+            }
+        } catch (error) {
+            console.error('Erro ao excluir tarefa:', error.response?.data || error.message);
+            setApiError('Erro ao excluir tarefa.');
         }
     };
 
-    const handleNextPage = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
-            fetchTasks(currentPage + 1, filter);
-        }
+    const handleEdit = (task) => {
+        setCurrentTask(task);
+        setShowFormModal(true);
     };
+
+    const handleAddTask = () => {
+        setCurrentTask(null);
+        setShowFormModal(true);
+    };
+
+    const handleCloseFormModal = () => {
+        setShowFormModal(false);
+        setCurrentTask(null);
+        fetchTasks();
+    };
+
 
     if (loading) {
-        return <div>Loading...</div>;
+        return <div>Carregando aplicação...</div>;
     }
 
     if (!isAuthenticated) {
         return null;
     }
 
-
     return (
-        <div>
-            <h2>My Tasks</h2>
-            <button onClick={handleAddTask} className="add_task_button">
-                Add Task
-            </button>
+        <div className="task-list-container">
+            <h1>Minhas Tarefas</h1>
 
-            {showTaskForm && (
-                <TaskForm
-                    task={editingTask}
-                    onClose={handleTaskFormClose}
-                />
-            )}
+            {apiError && <p className="error-message">{apiError}</p>}
 
-            <div style={{ marginBottom: '15px' }}>
-                Filter:
-                <button onClick={() => setFilter('all')} className="filter_button">
-                    All
-                </button>
-                <button onClick={() => setFilter('completed')} className="filter_button">
-                    Completed
-                </button>
-                <button onClick={() => setFilter('pending')} className="filter_button">
-                    Pending
-                </button>
+            <div className="task-controls">
+                <button onClick={handleAddTask} className="add-task-button">Add New Task</button>
+                <div className="filter-buttons">
+                    <button onClick={() => setFilter('all')} className={filter === 'all' ? 'active' : ''}>All</button>
+                    <button onClick={() => setFilter('completed')} className={filter === 'completed' ? 'active' : ''}>Completed</button>
+                </div>
             </div>
 
-            <div className="task_list">
-                {tasks.length === 0 && <p>No tasks found</p>}
-                {tasks.map(task => (
+            <div className="tasks-grid">
+                {filteredTasks.length === 0 && <p>No tasks found.</p>}
+                {filteredTasks.map(task => (
                     <TaskItem
                         key={task.id}
                         task={task}
-                        onEdit={handleEditTask}
-                        onDelete={handleDeleteTask}
                         onToggleComplete={handleToggleComplete}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
                     />
                 ))}
             </div>
 
-            <div className="pagination">
-                <button onClick={handlePreviousPage} disabled={currentPage === 1}>
-                    Previous
-                </button>
-                <span>Page {currentPage} of {totalPages}</span>
-                <button onClick={handleNextPage} disabled={currentPage === totalPages}>
-                    Next
-                </button>
-            </div>
+            {showFormModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <button onClick={handleCloseFormModal} className="modal-close-button">X</button>
+                        <TaskForm
+                            task={currentTask}
+                            onClose={handleCloseFormModal}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

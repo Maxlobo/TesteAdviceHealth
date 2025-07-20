@@ -3,7 +3,7 @@ import api from "../services/api";
 import "../styles/taskForm.css";
 
 
-function TaskForm() {
+function TaskForm({ task, onClose}) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [completed, setCompleted] = useState(false);

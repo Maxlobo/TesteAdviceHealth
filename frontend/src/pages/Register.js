@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
+import AuthContext from "../context/AuthContext";
 import "../styles/register.css";
 
 
@@ -18,9 +18,10 @@ function Register() {
         setError('');
         try {
             await register(username, email, password);
-            navigate("/login");
-        } catch (error) {
-            setError(error.response || 'Registration failed. Please try again.');
+            navigate("/login/");
+        } catch (err) {
+            console.error("Registration error:", err);
+            setError(err.response?.data?.detail || 'Registration failed. Please try again.');
         }
     };
 
