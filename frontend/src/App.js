@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React from "react";
 import { BrowserRouter as useNavigate, Router, Routes, Route, Link } from "react-router-dom";
 import Login from "./pages/Login";
 import TaskList from "./pages/TaskList";
@@ -8,7 +8,7 @@ import "./styles/header.css"
 
 
 function Header() {
-    const { isAuthenticated, logout } = useContext(AuthContext);
+    const { isAuthenticated, logout } = React.useContext(AuthContext);
     const navigate = useNavigate();
 
     const handleLogout = () => {
